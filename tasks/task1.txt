@@ -1,0 +1,90 @@
+Update the def do_create(self, arg): function of your command interpreter (console.py) to allow for object creation with given parameters:
+
+Command syntax: create <Class name> <param 1> <param 2> <param 3>...
+Param syntax: <key name>=<value>
+Value syntax:
+String: "<value>" => starts with a double quote
+any double quote inside the value must be escaped with a backslash \
+all underscores \_ must be replace by spaces . Example: You want to set the string My little house to the attribute name, your command line must be name="My_little_house"
+Float: <unit>.<decimal> => contains a dot .
+Integer: <number> => default case
+
+/**************\*\*\*\***************Notes**************\*\*\*\***************/
+the diffrence between match() and fullmatch() in Regex
+
+match():
+
+The match() function attempts to match the regex pattern against the beginning of the string.
+If the pattern matches at the beginning of the string, it returns a match object; otherwise, it returns None.
+It does not require the entire string to match the pattern; it's sufficient if the pattern matches at the beginning of the string.
+This function is suitable when you only need to check if the pattern matches at the beginning of the string.
+fullmatch():
+
+The fullmatch() function attempts to match the regex pattern against the entire string.
+It requires the entire string to match the pattern from start to end.
+If the entire string matches the pattern, it returns a match object; otherwise, it returns None.
+This function is useful when you want to ensure that the entire string conforms to the pattern, not just a part of it.
+
+args ===> create Place city_id="0001" user_id="0001" name="My_little_house" number_rooms=4 number_bathrooms=2 max_guest=10 price_by_night=300 latitude=37.773972 longitude=-122.431297
+
+algo
+1 - handle the class name (Place) by match the first word like Create [Place] ...
+but before we handle the name name="My_little_house" match_name = [Create Place name = "My_little_house"] this min input
+after we get the name then will we match the class name from match_name by match() method
+2 - if class matche and exist now extract the another string after name and but each pattern in index
+['city_id="0001"', 'user_id="0001"', 'name="My_little_house"', 'number_rooms=4', 'number_bathrooms=2', 'max_guest=10', 'price_by_night=300', 'latitude=37.773972', 'longitude=-122.431297']
+params_str = command[len(class_name):].strip()
+params = params_str.split(' ')
+
+    3 - build this Regex (?P<name>(?:[a-zA-Z]|_)(?:[a-zA-Z]|\d|_)*)=((?P<t_str>"([^"]|\")*")|(?P<t_float>[-+]?\d+\.\d +)|(?P<t_int>[-+]?\d+))
+    by build Rgex for str and int and float
+
+    # Regular expression pattern for string, float, and integer parameters
+        str_pattern = r'(?P<t_str>"([^"]|\")*")'
+        float_pattern = r'(?P<t_float>[-+]?\d+\.\d+)'
+        int_pattern = r'(?P<t_int>[-+]?\d+)'
+        # Combined parameter pattern including name, string, float, and integer
+        param_pattern = '{}=({}|{}|{})'.format(
+            name_pattern,
+            str_pattern,
+            float_pattern,
+            int_pattern
+        )
+      param_pattern = (?P<name>(?:[a-zA-Z]|_)(?:[a-zA-Z]|\d|_)*)=((?P<t_str>"([^"]|\")*")|(?P<t_float>[-+]?\d+\.\d +)| (?P<t_int>[-+]?\d+))
+      we will loop on each index and match with param pattern
+      and apply full match on each index **param_match = re.fullmatch(param_pattern, param)**
+      after that we will recive each pattern as key/valu pair
+        # Get parameter name
+                key_name = param_match.group('name')
+                # Get matched string value
+                str_v = param_match.group('t_str')
+                # Get matched float value
+                float_v = param_match.group('t_float')
+                # Get matched integer value
+                int_v = param_match.group('t_int')
+                # Convert and store parameter value based on its type
+                if float_v is not None:
+                    obj_kwargs[key_name] = float(float_v)
+                if int_v is not None:
+                    obj_kwargs[key_name] = int(int_v)
+                if str_v is not None:
+                    obj_kwargs[key_name] = str_v[1:-1].replace('_', ' ')  # Remove quotes and replace underscores with spaces
+
+    4 - after create the dict 
+          we will check the storage type from environment 
+           if os.getenv('HBNB_TYPE_STORAGE') == 'db':
+                check the id and created_at and updated_at if its not input generate it before save the dict 
+                  if not hasattr(obj_kwargs, 'id'):
+                     obj_kwargs['id'] = str(uuid.uuid4()) and date and 
+            after that we will save it 
+            for db
+            new_instance = HBNBCommand.classes[class_name](**obj_kwargs)
+            new_instance.save()
+            print(new_instance.id)
+
+            or save it in file 
+                for key, value in obj_kwargs.items():
+                  if key not in ignored_attrs: ==> ignored_attrs ('id', 'created_at', 'updated_at', '__class__')
+                      setattr(new_instance, key, value)
+            new_instance.save()
+            print(new_instance.id)
