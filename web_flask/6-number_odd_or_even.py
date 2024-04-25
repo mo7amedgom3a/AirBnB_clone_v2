@@ -49,8 +49,12 @@ def number_odd_or_even(n=None):
     H1 tag: “Number: n is even|odd” inside the tag BODY
     """
     if isinstance(n, int):
-        return render_template("6-number_odd_or_even.html", n=n)
+        if n % 2:
+            eo = "odd"
+        else:
+            eo = "even"
+        return render_template("6-number_odd_or_even.html", n=n, eo=eo)
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=None)
+    app.run()
